@@ -13,13 +13,13 @@ type Next12Chunks = { id: string; files: string[] };
 export type PageBundleSizes = { page: string; size: number }[];
 
 export function getStaticBundleSizes(workingDir: string): PageBundleSizes {
-  const manifest = loadBuildManifest(workingDir);
+  const manifest = loadBuildManifest(workingDir, 'app-build-manifest.json');
 
   return getPageSizesFromManifest(manifest, workingDir);
 }
 
 export function getDynamicBundleSizes(workingDir: string): PageBundleSizes {
-  const staticManifest = loadBuildManifest(workingDir);
+  const staticManifest = loadBuildManifest(workingDir, 'build-manifest.json');
   const manifest = loadReactLoadableManifest(staticManifest.pages['/_app'], workingDir);
 
   return getPageSizesFromManifest(manifest, workingDir);
@@ -40,11 +40,11 @@ function getPageSizesFromManifest(manifest: BuildManifest, workingDir: string): 
   });
 }
 
-function loadBuildManifest(workingDir: string): BuildManifest {
-  const file = fs.readFileSync(
-    path.join(process.cwd(), workingDir, '.next', 'app-build-manifest.json'),
-    'utf-8',
-  );
+function loadBuildManifest(
+  workingDir: string,
+  fileName: string = 'app-build-manifest.json',
+): BuildManifest {
+  const file = fs.readFileSync(path.join(process.cwd(), workingDir, '.next', fileName), 'utf-8');
   return JSON.parse(file);
 }
 
