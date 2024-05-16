@@ -13,7 +13,10 @@ type Next12Chunks = { id: string; files: string[] };
 export type PageBundleSizes = { page: string; size: number }[];
 
 export function getStaticBundleSizes(workingDir: string): PageBundleSizes {
-  const manifest = loadBuildManifest(workingDir, 'app-build-manifest.json');
+  const pageManifest = loadBuildManifest(workingDir, 'build-manifest.json');
+  const appManifest = loadBuildManifest(workingDir, 'app-build-manifest.json');
+
+  const manifest = { ...pageManifest, pages: { ...pageManifest.pages, ...appManifest.pages } };
 
   return getPageSizesFromManifest(manifest, workingDir);
 }
