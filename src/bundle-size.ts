@@ -29,18 +29,20 @@ export function getDynamicBundleSizes(workingDir: string): PageBundleSizes {
 }
 
 function getPageSizesFromManifest(manifest: BuildManifest, workingDir: string): PageBundleSizes {
-  return Object.entries(manifest.pages).map(([page, files]) => {
-    const size = files
-      .map((filename: string) => {
-        const fn = path.join(process.cwd(), workingDir, '.next', filename);
-        const bytes = fs.readFileSync(fn);
-        const gzipped = zlib.gzipSync(bytes);
-        return gzipped.byteLength;
-      })
-      .reduce((s: number, b: number) => s + b, 0);
+  return Object.entries(manifest.pages)
+    .map(([page, files]) => {
+      const size = files
+        .map((filename: string) => {
+          const fn = path.join(process.cwd(), workingDir, '.next', filename);
+          const bytes = fs.readFileSync(fn);
+          const gzipped = zlib.gzipSync(bytes);
+          return gzipped.byteLength;
+        })
+        .reduce((s: number, b: number) => s + b, 0);
 
-    return { page, size };
-  });
+      return { page, size };
+    })
+    .sort((a, b) => (b.size - a.size ? 1 : -1));
 }
 
 function loadBuildManifest(
@@ -189,7 +191,16 @@ function formatBytes(bytes: number, signed = false) {
 
   const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
 
-  return `${sign}${parseFloat(Math.abs(bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
+  // Calculate the value in KB to check if it's more than 500KB
+  const valueInKB = Math.abs(bytes) / 1024;
+  const formattedValue = `${parseFloat(Math.abs(bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
+
+  // If the value is more than 500KB, wrap it in red color markdown
+  if (valueInKB > 500) {
+    return `${sign}:red_circle: **${formattedValue}**`;
+  }
+
+  return `${sign}${formattedValue}`;
 }
 
 function getSign(bytes: number) {
